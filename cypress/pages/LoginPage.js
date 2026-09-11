@@ -1,28 +1,43 @@
 export default class LoginPage {
-    usernameInput='[data-test="username"]';
-    passwordInput='[data-test="password"]';
-    loginButton='[data-test="login-button"]';
-    errorMessage='[data-test="error"]';
-
-    enterUsername(username){
-        cy.get(this.usernameInput).type(username);
+    elements = {
+        usernameInput:'[data-test="username"]',
+        passwordInput:'[data-test="password"]',
+        loginButton:'[data-test="login-button"]',
+        errorMessage:'[data-test="error"]'
     }
 
-    enterPassword(password){
-        cy.get(this.password).type(password);
+    visitPage(){
+        cy.visit('/');
+    }
+
+    getUsernameInput(){
+        return cy.get(this.elements.usernameInput);
+    }
+
+    getPasswordInput(){
+        return cy.get(this.elements.passwordInput);
+    }
+
+    getLoginButton(){
+        return cy.get(this.elements.loginButton);
     }
 
     clickLogin(){
-        cy.get(this.loginButton).click();
-    }
-
-    login(username,password){
-      this.enterUsername(username);
-      this.enterPassword(password);
-      this.clickLogin();
+        this.getLoginButton().click();
     }
 
     getErrorMessage(){
-        return cy.get(this.errorMessage);
+        return cy.get(this.elements.errorMessage);
+    }
+
+    login(username,password){
+      this.visitPage();
+      this.getUsernameInput().type(username);
+      this.getPasswordInput().type(password);
+      this.clickLogin();
+    }
+
+    verifyErrorMessage(message) {
+        this.getErrorMessage().should('be.visible').and('contain', message);
     }
 }

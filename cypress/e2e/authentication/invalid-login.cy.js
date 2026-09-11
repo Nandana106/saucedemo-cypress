@@ -2,10 +2,6 @@ import LoginPage from '../../pages/LoginPage';
 import users from '../../fixtures/users.json'
 
 describe('Invalid Login', () => {
-  beforeEach(()=>{ //hook
-    cy.visit('/');
-  });
-
   // it('should show error for invalid credentials',() => {
   users.invalidUsers.forEach((user)=>{
     it('should show error for invalid credentials',()=>{
@@ -14,7 +10,7 @@ describe('Invalid Login', () => {
       // cy.fixture('users').then((users) => {
         // loginPage.login(users.invalidUser.username,users.invalidUser.password);
         loginPage.login(user.username,user.password);
-        loginPage.getErrorMessage().should('be.visible').and('contain', 'Username and password do not match');
+        loginPage.verifyErrorMessage('Username and password do not match');
       // });
     });
   });   

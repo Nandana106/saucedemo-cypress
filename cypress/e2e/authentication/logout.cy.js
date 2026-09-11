@@ -1,16 +1,16 @@
+import LoginPage from "../../pages/LoginPage";
 import ProductsPage from '../../pages/ProductsPage';
 
 describe('Logout', () => {
-    beforeEach(()=>{
-        cy.visit('/');
-        cy.fixture('users').as('users');
-    });
-    it('should logout successfully',function () {
+    it('should logout successfully',() => {
+        const loginPage = new LoginPage();
         const productsPage = new ProductsPage();
+        const username = Cypress.env('username');
+        const password = Cypress.env('password');
 
-        cy.login(this.users.validUser.username,this.users.validUser.password);
-        productsPage.verifyProductsPage();
-        productsPage.logout();
-        cy.get('[data-test="login-button"]').should('be.visible');
+        loginPage.login(username,password);
+        productsPage.getProductsPage().should('be.visible');
+        productsPage.clickLogout();
+        loginPage.getLoginButton().should('be.visible');
     });
 });

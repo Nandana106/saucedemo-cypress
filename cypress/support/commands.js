@@ -28,7 +28,6 @@ import LoginPage from "../pages/LoginPage";
 Cypress.Commands.add('login',(username,password)=>{
     const loginPage = new LoginPage();
     cy.session([username, password],() => {
-        cy.visit('/');
         loginPage.login(username,password);
         cy.url().should('include', '/inventory.html');
     },

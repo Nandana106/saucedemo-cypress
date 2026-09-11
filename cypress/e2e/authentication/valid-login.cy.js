@@ -1,17 +1,14 @@
 import LoginPage from "../../pages/LoginPage";
-import productsPage from "../../pages/ProductsPage"
+import ProductsPage from "../../pages/ProductsPage"
 
 describe('Login Test',()=>{
-    beforeEach(()=>{
-        cy.visit('/');
-        cy.fixture('users').as('users');
-    });
     it('should login successfully',function () {
         const loginPage = new LoginPage();
-        const productsPage = new ProductPage();
+        const productsPage = new ProductsPage();
+        const username = Cypress.env('username');
+        const password = Cypress.env('password');
 
-        loginPage.login(this.user.validUser.username,this.user.validUser.password);
-        // cy.url().should('include','/inventory.html');
-        productsPage.verifyProductsPage();
+        loginPage.login(username,password);
+        productsPage.getProductsPage().should('have.length', 6);
     });
 })
