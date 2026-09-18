@@ -33,4 +33,8 @@ module.exports = defineConfig({
       return config;
     }
   },
+  env: {
+    password: 'YOUR_PASSWORD',
+    username: 'standard_user'
+  }
 });
