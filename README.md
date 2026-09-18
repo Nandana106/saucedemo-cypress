@@ -933,9 +933,8 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: cypress-reports
-          path: cypress/reports/
+          path: cypress/reports/html/
           if-no-files-found: ignore
-
 ```
 
 ---
