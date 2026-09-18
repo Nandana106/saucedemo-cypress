@@ -232,7 +232,7 @@ saucedemo-cypress/
 
  Make sure the following are installed:
 
- - Node.js 18+
+ - Node.js 22
 - npm
 - Git
 - VS Code or another code editor
