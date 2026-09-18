@@ -1,14 +1,12 @@
-import LoginPage from "../../pages/LoginPage"
 import ProductsPage from '../../pages/ProductsPage';
 describe('Product Listing Tests', () => {
-    const loginPage = new LoginPage();
     const productsPage = new ProductsPage();
     const username = Cypress.env('username');
     const password = Cypress.env('password');
 
     beforeEach(() => {//hook
         cy.fixture('products').as('products');
-        loginPage.login(username, password);
+        cy.login(username, password);
     });
 
     it('should display Products page title', () => {
@@ -16,7 +14,7 @@ describe('Product Listing Tests', () => {
     });
 
     it('should display the correct number of products', function () {
-        productsPage.getProductsPage().should('have.length',this.products.length); // Assuming there are 6 products
+        productsPage.getProductsPage().should('have.length',this.products.length);
     });
 
     it('should display product names', function () {

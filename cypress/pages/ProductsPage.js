@@ -9,9 +9,7 @@ export default class ProductPage {
         sortDropdown: '[data-test="product-sort-container"]',
         addProduct : '[data-test^="add-to-cart-"]',
         cartBadge : '[data-test="shopping-cart-badge"]',
-        cartLink : '[data-test="shopping-cart-link"]',
-        menuButton : '#react-burger-menu-btn',
-        logoutLink : '[data-test="logout-sidebar-link"]'
+        cartLink : '[data-test="shopping-cart-link"]'
     }
 
     getPageTitle(){
@@ -65,18 +63,5 @@ export default class ProductPage {
 
     clickCartButton(){
         this.getCartButton().click();
-    }
-
-    getMenuButton() {
-        return cy.get(this.elements.menuButton);
-    }
-
-    getLogoutLink() {
-        return cy.get(this.elements.logoutLink);
-    }
-
-    clickLogout(){
-        this.getMenuButton().click();
-        this.getLogoutLink().click();
     }
 }

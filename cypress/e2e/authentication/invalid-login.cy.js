@@ -9,9 +9,23 @@ describe('Invalid Login', () => {
 
       // cy.fixture('users').then((users) => {
         // loginPage.login(users.invalidUser.username,users.invalidUser.password);
-        loginPage.login(user.username,user.password);
+        cy.login(user.username,user.password);
         loginPage.verifyErrorMessage('Username and password do not match');
       // });
     });
   });   
+
+  it('should show error for empty password',()=>{
+    const loginPage = new LoginPage();
+    const username = Cypress.env('username');
+    cy.login(username,'');
+    loginPage.verifyEmptyCredentialError('Epic sadface: Password is required');
+  });
+
+  it('should show error for empty username',()=>{
+    const loginPage = new LoginPage();
+    const password = Cypress.env('password');
+    cy.login('' , password);
+    loginPage.verifyEmptyCredentialError('Epic sadface: Username is required');
+  });
 });

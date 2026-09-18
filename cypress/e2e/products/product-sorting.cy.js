@@ -1,15 +1,13 @@
-import LoginPage from "../../pages/LoginPage"
 import ProductsPage from '../../pages/ProductsPage';
 
 describe('Product Sorting', () => {
-    const loginPage = new LoginPage();
     const productsPage = new ProductsPage();
     const username = Cypress.env('username');
     const password = Cypress.env('password');
 
     beforeEach(() => {
         cy.fixture('products').as('products');
-        loginPage.login(username, password);
+        cy.login(username, password);
     });
 
     it('should sort products by name in ascending order', function() {

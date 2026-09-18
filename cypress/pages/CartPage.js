@@ -53,5 +53,6 @@ export default class CartPage {
 
     clickCheckout(){
         this.getCheckoutButton().click();
+        cy.url().should('include', '/checkout-step-one.html');
     }
 }
