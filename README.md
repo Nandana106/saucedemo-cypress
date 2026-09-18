@@ -880,51 +880,62 @@ on:
   workflow_dispatch:
 
 jobs:
-
   cypress:
 
     runs-on: ubuntu-latest
 
     steps:
 
+      # 1. Checkout repository
       - name: Checkout repository
         uses: actions/checkout@v4
 
+      # 2. Setup Node.js
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: 22
           cache: npm
 
+      # 3. Install dependencies
       - name: Install dependencies
         run: npm ci
 
+      # 4. Run Cypress tests
       - name: Run Cypress tests
-        run : npx cypress run --browser chrome
-        uses: cypress-io/github-action@v6
+        uses: cypress-io/github-action@v7
         with:
           browser: chrome
+        env:
+          CYPRESS_password: ${{ secrets.CYPRESS_PASSWORD }}
 
+      # 5. Upload screenshots
       - name: Upload Cypress screenshots
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: cypress-screenshots
-          path: cypress/screenshots
+          path: cypress/screenshots/
+          if-no-files-found: ignore
 
+      # 6. Upload videos
       - name: Upload Cypress videos
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: cypress-videos
-          path: cypress/videos
+          path: cypress/videos/
+          if-no-files-found: ignore
 
-      - name: Upload test reports
+      # 7. Upload HTML reports
+      - name: Upload Cypress reports
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: cypress-reports
           path: cypress/reports/
+          if-no-files-found: ignore
+
 ```
 
 ---
