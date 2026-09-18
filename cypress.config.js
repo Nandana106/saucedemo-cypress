@@ -7,6 +7,7 @@ module.exports = defineConfig({
   screenshotOnRunFailure: true,
   reporter: 'cypress-mochawesome-reporter',
   reporterOptions: {
+    reportDir: 'cypress/reports/html',
     charts: true,
     reportPageTitle: 'SauceDemo Cypress Automation',
     embeddedScreenshots: true,
