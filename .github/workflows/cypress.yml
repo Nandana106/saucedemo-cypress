@@ -97,74 +97,74 @@ jobs:
           path: cypress/videos/
           if-no-files-found: ignore
 
-# 8. Generate Mochawesome Report
-report:
-  name: Generate Mochawesome Report
-  runs-on: ubuntu-latest
-  needs: cypress
-  if: always()
+  # 8. Generate Mochawesome Report
+  report:
+    name: Generate Mochawesome Report
+    runs-on: ubuntu-latest
+    needs: cypress
+    if: always()
 
-  steps:
+    steps:
 
-    - name: Checkout repository
-      uses: actions/checkout@v4
+      - name: Checkout repository
+        uses: actions/checkout@v4
 
-    - name: Setup Node.js
-      uses: actions/setup-node@v4
-      with:
-        node-version: 22
-        cache: npm
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
 
-    - name: Install dependencies
-      run: npm ci
+      - name: Install dependencies
+        run: npm ci
 
-    - name: Download all Mochawesome reports
-      uses: actions/download-artifact@v4
-      with:
-        pattern: mochawesome-*
-        path: cypress/reports/jsons
+      - name: Download all Mochawesome reports
+        uses: actions/download-artifact@v4
+        with:
+          pattern: mochawesome-*
+          path: cypress/reports/jsons
 
-    - name: Show downloaded reports
-      run: |
-        echo "Downloaded JSON reports:"
-        find cypress/reports/jsons -type f -name "*.json"
+      - name: Show downloaded reports
+        run: |
+          echo "Downloaded JSON reports:"
+          find cypress/reports/jsons -type f -name "*.json"
 
-    - name: Collect JSON reports
-      run: |
-        mkdir -p cypress/reports/merged-json
+      - name: Collect JSON reports
+        run: |
+          mkdir -p cypress/reports/merged-json
 
-        find cypress/reports/jsons \
-          -type f \
-          -name "*.json" \
-          -exec cp {} cypress/reports/merged-json/ \;
+          find cypress/reports/jsons \
+            -type f \
+            -name "*.json" \
+            -exec cp {} cypress/reports/merged-json/ \;
 
-        echo "JSON files to merge:"
-        find cypress/reports/merged-json -type f -name "*.json"
+          echo "JSON files to merge:"
+          find cypress/reports/merged-json -type f -name "*.json"
 
-    - name: Merge Mochawesome JSON
-      run: |
-        npx mochawesome-merge "cypress/reports/merged-json/*.json" \
-          -o cypress/reports/mochawesome.json
+      - name: Merge Mochawesome JSON
+        run: |
+          npx mochawesome-merge "cypress/reports/merged-json/*.json" \
+            -o cypress/reports/mochawesome.json
 
-    - name: Generate HTML report
-      run: |
-        npx marge cypress/reports/mochawesome.json \
-          -f index \
-          -o cypress/reports/html
+      - name: Generate HTML report
+        run: |
+          npx marge cypress/reports/mochawesome.json \
+            -f index \
+            -o cypress/reports/html
 
-    - name: Show generated HTML
-      run: |
-        echo "Generated report:"
-        find cypress/reports/html -type f
+      - name: Show generated HTML
+        run: |
+          echo "Generated report:"
+          find cypress/reports/html -type f
 
-    - name: Setup GitHub Pages
-      uses: actions/configure-pages@v5
+      - name: Setup GitHub Pages
+        uses: actions/configure-pages@v5
 
-    - name: Upload GitHub Pages artifact
-      uses: actions/upload-pages-artifact@v4
-      with:
-        path: cypress/reports/html
+      - name: Upload GitHub Pages artifact
+        uses: actions/upload-pages-artifact@v4
+        with:
+          path: cypress/reports/html
 
-    - name: Deploy to GitHub Pages
-      id: deployment
-      uses: actions/deploy-pages@v4
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
