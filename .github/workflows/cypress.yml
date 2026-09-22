@@ -97,8 +97,8 @@ jobs:
           path: cypress/videos/
           if-no-files-found: ignore
 
-  # 8. Generate Mochawesome Report
-  report:
+# 8. Generate Mochawesome Report
+report:
   name: Generate Mochawesome Report
   runs-on: ubuntu-latest
   needs: cypress
