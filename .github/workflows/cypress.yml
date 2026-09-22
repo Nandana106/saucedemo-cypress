@@ -10,7 +10,7 @@ on:
       - main
 
   workflow_dispatch:
-  
+
 permissions:
   contents: read
   pages: write
@@ -77,6 +77,7 @@ jobs:
         with:
           name: mochawesome-${{ matrix.name }}
           path: cypress/reports/.jsons/
+          include-hidden-files: true
           if-no-files-found: warn
 
       # 6. Upload screenshots
@@ -121,17 +122,17 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           pattern: mochawesome-*
-          path: cypress/reports/.jsons
+          path: cypress/reports/jsons
           merge-multiple: true
 
       - name: Show downloaded reports
         run: |
           echo "Downloaded JSON reports:"
-          find cypress/reports/.jsons -type f -name "*.json"
+          find cypress/reports/jsons -type f -name "*.json"
 
       - name: Merge Mochawesome JSON
         run: |
-          npx mochawesome-merge "cypress/reports/.jsons/*.json" \
+          npx mochawesome-merge "cypress/reports/jsons/*.json" \
             -o cypress/reports/mochawesome.json
 
       - name: Generate HTML report
