@@ -4,7 +4,6 @@ const fs = require('node:fs');
 const mochawesome = require('cypress-mochawesome-reporter/plugin');
 
 module.exports = defineConfig({
-  screenshotOnRunFailure: true,
   reporter: 'cypress-mochawesome-reporter',
   reporterOptions: {
     reportDir: 'cypress/reports',
@@ -15,6 +14,7 @@ module.exports = defineConfig({
     saveAllAttempts: false
   },
   video:true,
+  screenshotOnRunFailure: true,
   retries: {
     runMode: 2,
     openMode: 0

@@ -7,7 +7,10 @@
     "cy:run": "cypress run",
     "test": "cypress run",
     "test:chrome": "cypress run --browser chrome",
-    "test:headed": "cypress run --headed"
+    "test:headed": "cypress run --headed",
+    "report:merge": "mochawesome-merge \"cypress/reports/.jsons/*.json\" > cypress/reports/mochawesome.json",
+    "report:html": "marge cypress/reports/.jsons/mochawesome.json -f index -o cypress/reports/html",
+    "report": "npm run cy:run && npm run report:merge && npm run report:html"
   },
   "author": "Nandana",
   "devDependencies": {
