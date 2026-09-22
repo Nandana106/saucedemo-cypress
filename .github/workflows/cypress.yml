@@ -223,6 +223,7 @@ jobs:
       - name: Upload GitHub Pages artifact
         uses: actions/upload-pages-artifact@v4
         with:
+          name: github-pages
           path: cypress/reports/html
 
       # 12. Deploy report to GitHub Pages
