@@ -45,10 +45,11 @@ jobs:
           - name: checkout
             spec: cypress/e2e/checkout/**/*.cy.js
 
-          - name: footer-sidebar
-            spec: |
-              cypress/e2e/footer/**/*.cy.js,
-              cypress/e2e/sidebar/**/*.cy.js
+          - name: footer
+            spec: cypress/e2e/footer/**/*.cy.js
+          
+          - name: sidebar
+            spec: "cypress/e2e/sidebar/**/*.cy.js"
 
     steps:
 
