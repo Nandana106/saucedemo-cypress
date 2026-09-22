@@ -6,7 +6,10 @@ const mochawesome = require('cypress-mochawesome-reporter/plugin');
 module.exports = defineConfig({
   reporter: 'cypress-mochawesome-reporter',
   reporterOptions: {
-    reportDir: 'cypress/reports',
+    reportDir: 'cypress/reports', 
+    overwrite: false,
+    html: false,
+    json: true,
     charts: true,
     reportPageTitle: 'SauceDemo Cypress Automation',
     embeddedScreenshots: true,
