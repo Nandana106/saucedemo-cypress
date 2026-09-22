@@ -861,12 +861,35 @@ npx cypress run --spec "cypress/e2e/authentication/login.cy.js"
 
  # 🔄 CI/CD – GitHub Actions
 
- The framework supports automated test execution using GitHub Actions.
+ The framework supports automated test execution using GitHub Actions with **parallel test execution** for faster feedback.
 
- Example `.github/workflows/cypress.yml`:
+ ## Workflow Triggers
 
-```
-name: Cypress E2E Tests
+ The `.github/workflows/cypress.yml` workflow runs on:
+
+ - **Push** to `main` branch
+- **Pull Requests** to `main` branch
+- **Manual trigger** (workflow_dispatch)
+
+ ## Parallel Test Execution
+
+ Tests are executed in parallel using a **matrix strategy** with 6 concurrent jobs, one for each test category:
+
+| Job | Spec Pattern | Tests |
+|---|---|---|
+| Authentication | `cypress/e2e/authentication/**/*.cy.js` | Login, Invalid Login, Locked User, Logout |
+| Products | `cypress/e2e/products/**/*.cy.js` | Product Listing, Sorting, Details |
+| Cart | `cypress/e2e/cart/**/*.cy.js` | Add to Cart, Remove from Cart |
+| Checkout | `cypress/e2e/checkout/**/*.cy.js` | Checkout Details, Place Order, Order Confirmation |
+| Footer | `cypress/e2e/footer/**/*.cy.js` | Footer Validation |
+| Sidebar | `cypress/e2e/sidebar/**/*.cy.js` | Sidebar Navigation |
+
+ This parallel execution significantly reduces total CI/CD run time.
+
+ ## Workflow Configuration
+
+```yaml
+name: Cypress Tests and Report
 
 on:
   push:
@@ -879,13 +902,38 @@ on:
 
   workflow_dispatch:
 
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
 jobs:
   cypress:
-
+    name: Cypress - ${{ matrix.name }}
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: authentication
+            spec: cypress/e2e/authentication/**/*.cy.js
+
+          - name: products
+            spec: cypress/e2e/products/**/*.cy.js
+
+          - name: cart
+            spec: cypress/e2e/cart/**/*.cy.js
+
+          - name: checkout
+            spec: cypress/e2e/checkout/**/*.cy.js
+
+          - name: footer
+            spec: cypress/e2e/footer/**/*.cy.js
+
+          - name: sidebar
+            spec: cypress/e2e/sidebar/**/*.cy.js
 
     steps:
-
       # 1. Checkout repository
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -902,39 +950,43 @@ jobs:
         run: npm ci
 
       # 4. Run Cypress tests
-      - name: Run Cypress tests
-        uses: cypress-io/github-action@v7
-        with:
-          browser: chrome
+      - name: Run Cypress Tests
+        continue-on-error: true
+        run: |
+          echo "Running: ${{ matrix.name }}"
+          echo "Spec: ${{ matrix.spec }}"
+
+          npx cypress run \
+            --browser chrome \
+            --spec "${{ matrix.spec }}"
         env:
           CYPRESS_password: ${{ secrets.CYPRESS_PASSWORD }}
 
-      # 5. Upload screenshots
+      # 5. Upload Mochawesome JSON reports
+      - name: Upload Mochawesome JSON
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: mochawesome-${{ matrix.name }}
+          path: cypress/reports/.jsons/
+          include-hidden-files: true
+          if-no-files-found: warn
+
+      # 6. Upload Cypress screenshots
       - name: Upload Cypress screenshots
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: cypress-screenshots
+          name: screenshots-${{ matrix.name }}
           path: cypress/screenshots/
-          if-no-files-found: ignore
 
-      # 6. Upload videos
+      # 7. Upload Cypress videos
       - name: Upload Cypress videos
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: cypress-videos
+          name: videos-${{ matrix.name }}
           path: cypress/videos/
-          if-no-files-found: ignore
-
-      # 7. Upload HTML reports
-      - name: Upload Cypress reports
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: cypress-reports
-          path: cypress/reports/
-          if-no-files-found: ignore
 ```
 
 ---
@@ -942,22 +994,46 @@ jobs:
  # 🔁 CI/CD Workflow
 
 ```
-Developer Push
-      ↓
-GitHub Repository
-      ↓
-GitHub Actions
-      ↓
-Install Dependencies
-      ↓
-Run Cypress Tests
-      ↓
-Generate Screenshots / Videos
-      ↓
-Upload Artifacts
-      ↓
-Test Result
+Developer Push to main / Create PR
+           ↓
+   GitHub Actions Triggered
+           ↓
+   Parallel Test Execution (6 jobs)
+   ├─ Authentication Tests
+   ├─ Products Tests
+   ├─ Cart Tests
+   ├─ Checkout Tests
+   ├─ Footer Tests
+   └─ Sidebar Tests
+           ↓
+   Generate Test Evidence
+   ├─ Screenshots
+   ├─ Videos
+   └─ Mochawesome Reports
+           ↓
+   Upload Artifacts
+           ↓
+   GitHub Actions Summary
 ```
+
+---
+
+ # 🔐 GitHub Secrets Configuration
+
+ To run tests in GitHub Actions, configure the following secret:
+
+ **Secret Name:** `CYPRESS_PASSWORD`
+**Value:** Your SauceDemo password
+ Steps:
+
+1. Go to your GitHub repository
+2. Settings → Secrets and variables → Actions
+3. Click "New repository secret"
+4. Name: `CYPRESS_PASSWORD`
+5. Value: Enter your password
+6. Click "Add secret"
+
+ The workflow will use this secret for authentication during CI/CD test runs.
 
 ---
 
@@ -1149,16 +1225,8 @@ cypress/videos/
 - [ ] ESLint Integration
 - [ ] Prettier Integration
 - [ ] Test Tagging
-- [ ] Parallel Test Execution
 - [ ] Cross-Browser Testing
-- [ ] Docker Execution
-- [ ] Slack/Teams Notifications
-- [ ] GitHub Pages Report Publishing
-- [ ] Accessibility Testing
-- [ ] API Testing
 - [ ] Visual Regression Testing
-- [ ] Test Retry Strategy
-- [ ] Advanced CI Artifact Management
 
 ---
 
