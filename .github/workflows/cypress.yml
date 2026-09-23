@@ -146,17 +146,7 @@ jobs:
           pattern: mochawesome-*
           path: cypress/reports/jsons
 
-      # 5. Show downloaded reports
-      - name: Show downloaded reports
-        run: |
-          echo "======================================"
-          echo "Downloaded JSON reports:"
-          echo "======================================"
-          find cypress/reports/jsons \
-            -type f \
-            -name "*.json" \
-            -print
-      # 6. Collect JSON reports
+      # 5. Collect JSON reports
       - name: Collect JSON reports
         run: |
           mkdir -p cypress/reports/merged-json
@@ -170,48 +160,40 @@ jobs:
               -type f \
               -name "*.json"
           )
-          echo "======================================"
-          echo "Total JSON reports collected: $counter"
-          echo "======================================"
-          echo "JSON files to merge:"
-          find cypress/reports/merged-json \
-            -type f \
-            -name "*.json" \
-            -print
-      # 7. Merge Mochawesome JSON
+
+      # 6. Merge Mochawesome JSON
       - name: Merge Mochawesome JSON
         run: |
           npx mochawesome-merge \
             "cypress/reports/merged-json/*.json" \
             -o cypress/reports/mochawesome.json
-      # 8. Generate HTML report
+          
+          if [ ! -f cypress/reports/mochawesome.json ]; then
+            echo "❌ Error: Merged report not created"
+            exit 1
+          fi
+          echo "✅ Merge successful"
+
+      # 7. Generate HTML report
       - name: Generate HTML report
         run: |
           npx marge \
             cypress/reports/mochawesome.json \
             -f index \
             -o cypress/reports/html
-      # 9. Verify generated HTML
-      - name: Show generated HTML
-        run: |
-          echo "======================================"
-          echo "Generated HTML report:"
-          echo "======================================"
-          find cypress/reports/html \
-            -type f \
-            -print
-      # 10. Configure GitHub Pages
+
+      # 8. Configure GitHub Pages
       - name: Setup GitHub Pages
         uses: actions/configure-pages@v5
 
-      # 11. Upload report to GitHub Pages
+      # 9. Upload report to GitHub Pages
       - name: Upload GitHub Pages artifact
         uses: actions/upload-pages-artifact@v4
         with:
           name: github-pages
           path: cypress/reports/html
 
-      # 12. Deploy report to GitHub Pages
+      # 10. Deploy report to GitHub Pages
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v4
