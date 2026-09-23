@@ -27,8 +27,6 @@ jobs:
 
     runs-on: ubuntu-latest
 
-    timeout-minutes: 15
-
     strategy:
       fail-fast: false
 
@@ -59,27 +57,18 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      # 2. Debug - List directory contents
-      - name: Debug - Check workspace
-        run: |
-          echo "Current directory:"
-          pwd
-          echo "Directory contents:"
-          ls -la
-          echo "Checking for package.json:"
-          find . -name "package.json" -type f
-
-      # 3. Setup Node.js
+      # 2. Setup Node.js
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: 22
+          cache: npm
 
-      # 4. Install dependencies
+      # 3. Install dependencies
       - name: Install dependencies
-        run: npm install
+        run: npm ci
 
-      # 5. Run Cypress tests
+      # 4. Run Cypress tests
       - name: Run Cypress Tests
         continue-on-error: true
         run: npx cypress run \
@@ -87,17 +76,8 @@ jobs:
             --spec "${{ matrix.spec }}"
         env:
           CYPRESS_password: ${{ secrets.CYPRESS_PASSWORD }}
-  
-      # 6. Rename report file with matrix name
-      - name: Rename report file
-        if: always()
-        run: |
-          if [ -f cypress/reports/.jsons/mochawesome.json ]; then
-            mv cypress/reports/.jsons/mochawesome.json cypress/reports/.jsons/mochawesome-${{ matrix.name }}.json
-            echo "✅ Renamed: mochawesome-${{ matrix.name }}.json"
-          fi
 
-      # 7. Upload Mochawesome JSON
+      # 5. Upload Mochawesome JSON
       - name: Upload Mochawesome JSON
         if: always()
         uses: actions/upload-artifact@v4
@@ -106,9 +86,8 @@ jobs:
           path: cypress/reports/.jsons/
           include-hidden-files: true
           if-no-files-found: warn
-          retention-days: 30
 
-      # 8. Upload Cypress screenshots
+      # 6. Upload Cypress screenshots
       - name: Upload Cypress screenshots
         if: always()
         uses: actions/upload-artifact@v4
@@ -116,9 +95,8 @@ jobs:
           name: screenshots-${{ matrix.name }}
           path: cypress/screenshots/
           if-no-files-found: ignore
-          retention-days: 30
 
-      # 9. Upload Cypress videos
+      # 7. Upload Cypress videos
       - name: Upload Cypress videos
         if: always()
         uses: actions/upload-artifact@v4
@@ -126,7 +104,6 @@ jobs:
           name: videos-${{ matrix.name }}
           path: cypress/videos/
           if-no-files-found: ignore
-          retention-days: 30
 
 
   # ==========================================
@@ -138,48 +115,55 @@ jobs:
 
     runs-on: ubuntu-latest
 
-    timeout-minutes: 10
-
     needs: cypress
 
     if: always()
 
     steps:
 
-      # 1. Setup Node.js
+      # 1. Checkout repository
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # 2. Setup Node.js
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: 22
+          cache: npm
 
-      # 2. Install dependencies
+      # 3. Install dependencies
       - name: Install dependencies
-        run: npm install
+        run: npm ci
 
-      # 3. Download all Mochawesome reports
+      # 4. Download all Mochawesome reports
       - name: Download all Mochawesome reports
         uses: actions/download-artifact@v4
         with:
           pattern: mochawesome-*
           path: cypress/reports/jsons
 
-      # 4. Merge Mochawesome JSON
+      # 6. Collect JSON reports
+      - name: Collect JSON reports
+        run: |
+          mkdir -p cypress/reports/merged-json
+          counter=0
+          while IFS= read -r file; do
+            counter=$((counter + 1))
+            cp "$file" \
+              "cypress/reports/merged-json/report_${counter}.json"
+          done < <(
+            find cypress/reports/jsons \
+              -type f \
+              -name "*.json"
+          )
+      # 7. Merge Mochawesome JSON
       - name: Merge Mochawesome JSON
         run: |
           npx mochawesome-merge \
-            "cypress/reports/jsons/**/mochawesome-*.json" \
+            "cypress/reports/merged-json/*.json" \
             -o cypress/reports/mochawesome.json
-          
-          # Verify merged report was created
-          if [ ! -f cypress/reports/mochawesome.json ]; then
-            echo "❌ Error: Merged report file not created!"
-            exit 1
-          fi
-          
-          echo "✅ Report merge completed successfully"
-          ls -lh cypress/reports/mochawesome.json
-
-      # 5. Generate HTML report
+      # 8. Generate HTML report
       - name: Generate HTML report
         run: |
           npx marge \
@@ -187,18 +171,18 @@ jobs:
             -f index \
             -o cypress/reports/html
 
-      # 6. Setup GitHub Pages
+      # 9. Setup GitHub Pages
       - name: Setup GitHub Pages
         uses: actions/configure-pages@v5
 
-      # 7. Upload report to GitHub Pages
+      # 10. Upload report to GitHub Pages
       - name: Upload GitHub Pages artifact
         uses: actions/upload-pages-artifact@v4
         with:
           name: github-pages
           path: cypress/reports/html
 
-      # 8. Deploy report to GitHub Pages
+      # 11. Deploy report to GitHub Pages
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v4
