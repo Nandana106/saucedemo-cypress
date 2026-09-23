@@ -64,7 +64,6 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 22
-          cache: npm
 
       # 3. Install dependencies
       - name: Install dependencies
@@ -142,7 +141,6 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 22
-          cache: npm
 
       # 2. Install dependencies
       - name: Install dependencies
