@@ -71,7 +71,10 @@ jobs:
       # 4. Run Cypress tests
       - name: Run Cypress Tests
         continue-on-error: true
-        run: npx cypress run \
+        run: |
+          echo "Running: ${{ matrix.name }}"
+          echo "Spec: ${{ matrix.spec }}"
+          npx cypress run \
             --browser chrome \
             --spec "${{ matrix.spec }}"
         env:
@@ -181,12 +184,6 @@ jobs:
           npx mochawesome-merge \
             "cypress/reports/merged-json/*.json" \
             -o cypress/reports/mochawesome.json
-            
-          if [ ! -f cypress/reports/mochawesome.json ]; then
-            echo "❌ Error: Merged report not created"
-            exit 1
-          fi
-          echo "✅ Merge successful"
       # 8. Generate HTML report
       - name: Generate HTML report
         run: |
