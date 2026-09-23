@@ -27,6 +27,8 @@ jobs:
 
     runs-on: ubuntu-latest
 
+    timeout-minutes: 15
+
     strategy:
       fail-fast: false
 
@@ -71,11 +73,7 @@ jobs:
       # 4. Run Cypress tests
       - name: Run Cypress Tests
         continue-on-error: true
-        run: |
-          echo "Running: ${{ matrix.name }}"
-          echo "Spec: ${{ matrix.spec }}"
-
-          npx cypress run \
+        run: npx cypress run \
             --browser chrome \
             --spec "${{ matrix.spec }}"
         env:
@@ -90,6 +88,7 @@ jobs:
           path: cypress/reports/.jsons/
           include-hidden-files: true
           if-no-files-found: warn
+          retention-days: 30
 
       # 6. Upload Cypress screenshots
       - name: Upload Cypress screenshots
@@ -99,6 +98,7 @@ jobs:
           name: screenshots-${{ matrix.name }}
           path: cypress/screenshots/
           if-no-files-found: ignore
+          retention-days: 30
 
       # 7. Upload Cypress videos
       - name: Upload Cypress videos
@@ -108,6 +108,7 @@ jobs:
           name: videos-${{ matrix.name }}
           path: cypress/videos/
           if-no-files-found: ignore
+          retention-days: 30
 
 
   # ==========================================
@@ -118,6 +119,8 @@ jobs:
     name: Generate Mochawesome Report
 
     runs-on: ubuntu-latest
+
+    timeout-minutes: 10
 
     needs: cypress
 
@@ -147,57 +150,23 @@ jobs:
           pattern: mochawesome-*
           path: cypress/reports/jsons
 
-      # 5. Show downloaded reports
-      - name: Show downloaded reports
-        run: |
-          echo "======================================"
-          echo "Downloaded JSON reports:"
-          echo "======================================"
-
-          find cypress/reports/jsons \
-            -type f \
-            -name "*.json" \
-            -print
-
-      # 6. Collect JSON reports
-      - name: Collect JSON reports
-        run: |
-          mkdir -p cypress/reports/merged-json
-
-          counter=0
-
-          while IFS= read -r file; do
-
-            counter=$((counter + 1))
-
-            cp "$file" \
-              "cypress/reports/merged-json/report_${counter}.json"
-
-          done < <(
-            find cypress/reports/jsons \
-              -type f \
-              -name "*.json"
-          )
-
-          echo "======================================"
-          echo "Total JSON reports collected: $counter"
-          echo "======================================"
-
-          echo "JSON files to merge:"
-
-          find cypress/reports/merged-json \
-            -type f \
-            -name "*.json" \
-            -print
-
-      # 7. Merge Mochawesome JSON
+      # 5. Merge Mochawesome JSON
       - name: Merge Mochawesome JSON
         run: |
           npx mochawesome-merge \
-            "cypress/reports/merged-json/*.json" \
+            "cypress/reports/jsons/**/mochawesome.json" \
             -o cypress/reports/mochawesome.json
+          
+          # Verify merged report was created
+          if [ ! -f cypress/reports/mochawesome.json ]; then
+            echo "❌ Error: Merged report file not created!"
+            exit 1
+          fi
+          
+          echo "✅ Report merge completed successfully"
+          ls -lh cypress/reports/mochawesome.json
 
-      # 8. Generate HTML report
+      # 6. Generate HTML report
       - name: Generate HTML report
         run: |
           npx marge \
@@ -205,29 +174,70 @@ jobs:
             -f index \
             -o cypress/reports/html
 
-      # 9. Verify generated HTML
-      - name: Show generated HTML
+      # 7. Check Test Results & Generate Summary
+      - name: Check Test Results & Generate Summary
+        if: always()
         run: |
-          echo "======================================"
-          echo "Generated HTML report:"
-          echo "======================================"
+          node -e "
+            const fs = require('fs');
+            const reportPath = 'cypress/reports/mochawesome.json';
+            
+            // Check if report file exists
+            if (!fs.existsSync(reportPath)) {
+              const errorMsg = '## ❌ Test Report Error\n\nReport file not found at ' + reportPath + '. No tests may have run.';
+              fs.appendFileSync(process.env.GITHUB_STEP_SUMMARY, errorMsg);
+              console.error('❌ Report file missing:', reportPath);
+              process.exit(1);
+            }
+            
+            try {
+              const report = JSON.parse(fs.readFileSync(reportPath, 'utf8'));
+              const stats = report.stats;
+              
+              // Validate stats object
+              if (!stats || !stats.tests || stats.passes === undefined || stats.failures === undefined) {
+                throw new Error('Invalid report format: missing required stats properties');
+              }
 
-          find cypress/reports/html \
-            -type f \
-            -print
+              const summary = \`
+          ## 📊 Test Results Summary
+          
+          | Metric | Count |
+          |--------|-------|
+          | ✅ Passed | \${stats.passes} |
+          | ❌ Failed | \${stats.failures} |
+          | ⏭️ Skipped | \${stats.skipped} |
+          | 📈 Total | \${stats.tests} |
+          | ⏱️ Duration | \${(stats.duration / 1000).toFixed(2)}s |
+          | 📊 Pass Rate | \${((stats.passes / stats.tests) * 100).toFixed(2)}% |
+          \`;
+              
+              fs.appendFileSync(process.env.GITHUB_STEP_SUMMARY, summary);
+              
+              if (stats.failures > 0) {
+                console.error(\`❌ \${stats.failures} test(s) failed!\`);
+                process.exit(1);
+              }
+            } catch (error) {
+              const errorMsg = '## ❌ Error Processing Report\n\n' + error.message;
+              fs.appendFileSync(process.env.GITHUB_STEP_SUMMARY, errorMsg);
+              console.error('❌ Error:', error.message);
+              process.exit(1);
+            }
+          "
 
-      # 10. Configure GitHub Pages
+      # 8. Setup GitHub Pages
       - name: Setup GitHub Pages
         uses: actions/configure-pages@v5
 
-      # 11. Upload report to GitHub Pages
+      # 9. Upload report to GitHub Pages
       - name: Upload GitHub Pages artifact
         uses: actions/upload-pages-artifact@v4
         with:
           name: github-pages
           path: cypress/reports/html
 
-      # 12. Deploy report to GitHub Pages
+      # 10. Deploy report to GitHub Pages
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v4
