@@ -26,7 +26,6 @@ jobs:
     name: Cypress - ${{ matrix.name }}
 
     runs-on: ubuntu-latest
-    timeout-minutes: 15
 
     strategy:
       fail-fast: false
@@ -72,7 +71,10 @@ jobs:
       # 4. Run Cypress tests
       - name: Run Cypress Tests
         continue-on-error: true
-        run: npx cypress run \
+        run: |
+          echo "Running: ${{ matrix.name }}"
+          echo "Spec: ${{ matrix.spec }}"
+          npx cypress run \
             --browser chrome \
             --spec "${{ matrix.spec }}"
         env:
@@ -87,7 +89,6 @@ jobs:
           path: cypress/reports/.jsons/
           include-hidden-files: true
           if-no-files-found: warn
-          retention-days: 30
 
       # 6. Upload Cypress screenshots
       - name: Upload Cypress screenshots
@@ -97,7 +98,6 @@ jobs:
           name: screenshots-${{ matrix.name }}
           path: cypress/screenshots/
           if-no-files-found: ignore
-          retention-days: 30
 
       # 7. Upload Cypress videos
       - name: Upload Cypress videos
@@ -107,7 +107,6 @@ jobs:
           name: videos-${{ matrix.name }}
           path: cypress/videos/
           if-no-files-found: ignore
-          retention-days: 30
 
 
   # ==========================================
@@ -118,8 +117,6 @@ jobs:
     name: Generate Mochawesome Report
 
     runs-on: ubuntu-latest
-
-    timeout-minutes: 10
 
     needs: cypress
 
