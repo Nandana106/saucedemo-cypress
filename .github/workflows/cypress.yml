@@ -160,16 +160,11 @@ jobs:
 
       # 5. Merge Mochawesome JSON
       - name: Merge Mochawesome JSON
-        run: npx mochawesome-merge \
-          "cypress/reports/jsons/**/mochawesome-*.json" \
-          -o cypress/reports/mochawesome.json
+        run: npx mochawesome-merge "cypress/reports/jsons/**/mochawesome-*.json" -o cypress/reports/mochawesome.json
 
       # 6. Generate HTML report
       - name: Generate HTML report
-        run: npx marge \
-          cypress/reports/mochawesome.json \
-          -f index \
-          -o cypress/reports/html
+        run: npx marge cypress/reports/mochawesome.json -f index -o cypress/reports/html
 
       # 7. Setup GitHub Pages
       - name: Setup GitHub Pages
