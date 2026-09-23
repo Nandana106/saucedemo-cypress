@@ -27,6 +27,8 @@ jobs:
 
     runs-on: ubuntu-latest
 
+    timeout-minutes: 15
+
     strategy:
       fail-fast: false
 
@@ -77,7 +79,16 @@ jobs:
         env:
           CYPRESS_password: ${{ secrets.CYPRESS_PASSWORD }}
 
-      # 5. Upload Mochawesome JSON
+      # 5. Rename report file with matrix name
+      - name: Rename report file
+        if: always()
+        run: |
+          if [ -f cypress/reports/.jsons/mochawesome.json ]; then
+            mv cypress/reports/.jsons/mochawesome.json cypress/reports/.jsons/mochawesome-${{ matrix.name }}.json
+            echo "✅ Renamed: mochawesome-${{ matrix.name }}.json"
+          fi
+
+      # 6. Upload Mochawesome JSON
       - name: Upload Mochawesome JSON
         if: always()
         uses: actions/upload-artifact@v4
@@ -86,8 +97,9 @@ jobs:
           path: cypress/reports/.jsons/
           include-hidden-files: true
           if-no-files-found: warn
+          retention-days: 30
 
-      # 6. Upload Cypress screenshots
+      # 7. Upload Cypress screenshots
       - name: Upload Cypress screenshots
         if: always()
         uses: actions/upload-artifact@v4
@@ -95,8 +107,9 @@ jobs:
           name: screenshots-${{ matrix.name }}
           path: cypress/screenshots/
           if-no-files-found: ignore
+          retention-days: 30
 
-      # 7. Upload Cypress videos
+      # 8. Upload Cypress videos
       - name: Upload Cypress videos
         if: always()
         uses: actions/upload-artifact@v4
@@ -104,6 +117,7 @@ jobs:
           name: videos-${{ matrix.name }}
           path: cypress/videos/
           if-no-files-found: ignore
+          retention-days: 30
 
 
   # ==========================================
@@ -114,6 +128,8 @@ jobs:
     name: Generate Mochawesome Report
 
     runs-on: ubuntu-latest
+
+    timeout-minutes: 10
 
     needs: cypress
 
@@ -130,11 +146,10 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 22
-          cache: npm
 
       # 3. Install dependencies
       - name: Install dependencies
-        run: npm ci
+        run: npm install
 
       # 4. Download all Mochawesome reports
       - name: Download all Mochawesome reports
@@ -143,27 +158,19 @@ jobs:
           pattern: mochawesome-*
           path: cypress/reports/jsons
 
-      # 6. Collect JSON reports
-      - name: Collect JSON reports
-        run: |
-          mkdir -p cypress/reports/merged-json
-          counter=0
-          while IFS= read -r file; do
-            counter=$((counter + 1))
-            cp "$file" \
-              "cypress/reports/merged-json/report_${counter}.json"
-          done < <(
-            find cypress/reports/jsons \
-              -type f \
-              -name "*.json"
-          )
-      # 7. Merge Mochawesome JSON
+      # 5. Merge Mochawesome JSON
       - name: Merge Mochawesome JSON
         run: |
           npx mochawesome-merge \
-            "cypress/reports/merged-json/*.json" \
+            "cypress/reports/jsons/**/mochawesome-*.json" \
             -o cypress/reports/mochawesome.json
-      # 8. Generate HTML report
+          
+          if [ ! -f cypress/reports/mochawesome.json ]; then
+            echo "❌ Error: Merged report not created"
+            exit 1
+          fi
+          echo "✅ Merge successful"
+      # 6. Generate HTML report
       - name: Generate HTML report
         run: |
           npx marge \
@@ -171,18 +178,18 @@ jobs:
             -f index \
             -o cypress/reports/html
 
-      # 9. Setup GitHub Pages
+      # 7. Setup GitHub Pages
       - name: Setup GitHub Pages
         uses: actions/configure-pages@v5
 
-      # 10. Upload report to GitHub Pages
+      # 8. Upload report to GitHub Pages
       - name: Upload GitHub Pages artifact
         uses: actions/upload-pages-artifact@v4
         with:
           name: github-pages
           path: cypress/reports/html
 
-      # 11. Deploy report to GitHub Pages
+      # 9. Deploy report to GitHub Pages
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v4
