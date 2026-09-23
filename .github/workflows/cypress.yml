@@ -64,10 +64,11 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 22
+          cache: npm
 
       # 3. Install dependencies
       - name: Install dependencies
-        run: npm install
+        run: npm ci
 
       # 4. Run Cypress tests
       - name: Run Cypress Tests
@@ -141,12 +142,13 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 22
+          cache: npm
 
       # 2. Install dependencies
       - name: Install dependencies
-        run: npm install
+        run: npm ci
 
-      # 3. Download all Mochawesome reports
+      # 4. Download all Mochawesome reports
       - name: Download all Mochawesome reports
         uses: actions/download-artifact@v4
         with:
