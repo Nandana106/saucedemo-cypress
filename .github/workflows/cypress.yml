@@ -145,7 +145,11 @@ jobs:
 
       # 5. Show downloaded reports
       - name: Show downloaded reports
-        run: find cypress/reports/jsons \
+        run: |
+          echo "======================================"
+          echo "Downloaded JSON reports:"
+          echo "======================================"
+          find cypress/reports/jsons \
             -type f \
             -name "*.json" \
             -print
@@ -163,6 +167,10 @@ jobs:
               -type f \
               -name "*.json"
           )
+          echo "======================================"
+          echo "Total JSON reports collected: $counter"
+          echo "======================================"
+          echo "JSON files to merge:"
           find cypress/reports/merged-json \
             -type f \
             -name "*.json" \
@@ -173,6 +181,7 @@ jobs:
           npx mochawesome-merge \
             "cypress/reports/merged-json/*.json" \
             -o cypress/reports/mochawesome.json
+            
           if [ ! -f cypress/reports/mochawesome.json ]; then
             echo "❌ Error: Merged report not created"
             exit 1
@@ -187,7 +196,11 @@ jobs:
             -o cypress/reports/html
       # 9. Verify generated HTML
       - name: Show generated HTML
-        run: find cypress/reports/html \
+        run: |
+          echo "======================================"
+          echo "Generated HTML report:"
+          echo "======================================"
+          find cypress/reports/html \
             -type f \
             -print
       # 10. Configure GitHub Pages
