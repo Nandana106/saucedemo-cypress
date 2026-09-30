@@ -339,12 +339,6 @@ cy.fixture('users')                     // Load test data
 
 ---
 
- # 🔐 GitHub Secrets
-
- Set `CYPRESS_PASSWORD` secret in GitHub repository settings for CI/CD authentication.
-
----
-
  # 🔧 Troubleshooting
 
 | Issue | Solution |
